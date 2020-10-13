@@ -36,16 +36,21 @@
             </template>
           </el-table-column>
           <el-table-column label="操作" width="180px">
-            <template>
+            <template #default="{row}">
               <!-- 修改 -->
 
               <el-tooltip class="item" effect="dark" content="修改" placement="top">
-                <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+                <el-button
+                  type="primary"
+                  icon="el-icon-edit"
+                  size="mini"
+                  @click="editDialogForm(row.id)"
+                ></el-button>
               </el-tooltip>
               <!-- 删除 -->
 
               <el-tooltip class="item" effect="dark" content="删除" placement="top">
-                <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+                <el-button type="danger" icon="el-icon-delete" size="mini" @click="open(row.id)"></el-button>
               </el-tooltip>
               <!-- 分配角色 -->
               <el-tooltip class="item" effect="dark" content="分配角色" placement="top">
@@ -86,6 +91,24 @@
         <el-button type="primary" @click="submitForm">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 修改用户 -->
+    <el-dialog title="修改用户" :visible.sync="editDialogFormVisible" @close="editResetDialog">
+      <el-form :model="editForm" :rules="rules" ref="editDialogForm">
+        <el-form-item label="用户名" label-width="70px">
+          <el-input v-model="editForm.username" autocomplete="off" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="70px" prop="email">
+          <el-input v-model="editForm.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" label-width="70px" prop="mobile">
+          <el-input v-model="editForm.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editDialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editSubmitForm">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -110,6 +133,12 @@ export default {
       callback(new Error('请输入合法的手机号码'))
     }
     return {
+      // 编辑
+      editDialogFormVisible: false,
+      // 编辑数据
+      editForm: {
+
+      },
       // 添加用户的表单数据
       addForm: {
         username: '',
@@ -148,6 +177,60 @@ export default {
     }
   },
   methods: {
+    // 删除确认
+    open (id) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const { data: res } = await this.$http.delete('users/' + id)
+        if (res.meta.status !== 200) {
+          return this.$message({
+            type: 'info',
+            message: '删除失败！'
+          })
+        }
+        this.getUserList()
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除！'
+        })
+      })
+    },
+
+    // 编辑提交
+    editSubmitForm () {
+      this.$refs.editDialogForm.validate(async valid => {
+        if (valid) {
+          console.log(this.editForm)
+          const { data: res } = await this.$http.put('/users/' + this.editForm.id, { email: this.editForm.email, mobile: this.editForm.mobile })
+          console.log(res)
+          if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+          this.editDialogFormVisible = false
+          this.getUserList()
+          this.$message.success(res.meta.msg)
+        } else {
+          this.$message.error('请输入正确信息！')
+        }
+      })
+    },
+    // 编辑重置
+    editResetDialog () {
+      this.$refs.editDialogForm.resetFields()
+    },
+    // 编辑用户
+    async editDialogForm (id) {
+      this.editDialogFormVisible = true
+      const { data: res } = await this.$http.get('users/' + id)
+
+      this.editForm = res.data
+    },
     submitForm () {
       this.$refs.dialogForm.validate(async (valid) => {
         if (valid) {
@@ -159,7 +242,7 @@ export default {
             this.getUserList()
           }
         } else {
-          console.log('error submit!!')
+          this.$message.error('请填写完整用户信息')
           return false
         }
       })
