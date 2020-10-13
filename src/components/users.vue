@@ -13,13 +13,13 @@
       <el-row :gutter="20">
         <el-col :span="8">
           <div>
-            <el-input placeholder="请输入内容" v-model="queryInfo.query">
+            <el-input placeholder="请输入内容" v-model="queryInfo.query" clearable @clear="queryBtn">
               <el-button slot="append" icon="el-icon-search" @click="queryBtn"></el-button>
             </el-input>
           </div>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary">添加用户</el-button>
+          <el-button type="primary" @click="dialogFormVisible = true">添加用户</el-button>
         </el-col>
       </el-row>
 
@@ -66,6 +66,26 @@
         :total="total"
       ></el-pagination>
     </el-card>
+    <el-dialog title="添加用户" :visible.sync="dialogFormVisible" @close="resetDialog">
+      <el-form :model="addForm" :rules="rules" ref="dialogForm">
+        <el-form-item label="用户名" label-width="70px" prop="username">
+          <el-input v-model="addForm.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" label-width="70px" prop="password">
+          <el-input v-model="addForm.password" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="70px" prop="email">
+          <el-input v-model="addForm.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" label-width="70px" prop="mobile">
+          <el-input v-model="addForm.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -73,8 +93,51 @@
 export default {
   name: 'users',
   data () {
+    var checkemail = (rule, value, callback) => {
+      const regEmail = /^\w+@\w+(\.\w+)+$/
+      if (regEmail.test(value)) {
+        return callback()
+      }
+      // 返回一个错误提示
+      callback(new Error('请输入合法的邮箱'))
+    }
+    var checkiphone = (rule, value, callback) => {
+      const regMobile = /^1[34578]\d{9}$/
+      if (regMobile.test(value)) {
+        return callback()
+      }
+      // 返回一个错误提示
+      callback(new Error('请输入合法的手机号码'))
+    }
     return {
+      // 添加用户的表单数据
+      addForm: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      },
 
+      rules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
+        ],
+
+        email: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          { validator: checkemail, trigger: 'blur' }
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { validator: checkiphone, trigger: 'blur' }
+        ]
+      },
+      dialogFormVisible: false,
       queryInfo: {
         query: '',
         pagenum: 1,
@@ -85,6 +148,23 @@ export default {
     }
   },
   methods: {
+    submitForm () {
+      this.$refs.dialogForm.validate(async (valid) => {
+        if (valid) {
+          const { data: res } = await this.$http.post('/users', this.addForm)
+
+          if (res.meta.status !== 201) { this.$message.error(res.meta.msg) } else {
+            this.dialogFormVisible = false
+            this.$message.success(res.meta.msg)
+            this.getUserList()
+          }
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+    resetDialog () { this.$refs.dialogForm.resetFields() },
     getUserList: async function () {
       const { data: res } = await this.$http.get('/users', {
         params: this.queryInfo
@@ -92,7 +172,7 @@ export default {
 
       this.userlist = res.data.users
       this.total = res.data.total
-      console.log(this.userlist)
+      // console.log(this.userlist)
     },
     handleSizeChange (val) {
       this.queryInfo.pagesize = val
