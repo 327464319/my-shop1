@@ -2,9 +2,8 @@
   <div id="app">
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>活动管理</el-breadcrumb-item>
-      <el-breadcrumb-item>活动列表</el-breadcrumb-item>
-      <el-breadcrumb-item>活动详情</el-breadcrumb-item>
+      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+      <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
     <!-- 卡片区域 -->
     <el-card class="box-card">
@@ -54,7 +53,12 @@
               </el-tooltip>
               <!-- 分配角色 -->
               <el-tooltip class="item" effect="dark" content="分配角色" placement="top">
-                <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+                <el-button
+                  type="warning"
+                  icon="el-icon-setting"
+                  size="mini"
+                  @click="setUserDialog(row)"
+                ></el-button>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -71,7 +75,8 @@
         :total="total"
       ></el-pagination>
     </el-card>
-    <el-dialog title="添加用户" :visible.sync="dialogFormVisible" @close="resetDialog">
+    <!-- 添加用户dialog -->
+    <el-dialog class="mb" title="添加用户" :visible.sync="dialogFormVisible" @close="resetDialog">
       <el-form :model="addForm" :rules="rules" ref="dialogForm">
         <el-form-item label="用户名" label-width="70px" prop="username">
           <el-input v-model="addForm.username" autocomplete="off"></el-input>
@@ -91,7 +96,7 @@
         <el-button type="primary" @click="submitForm">确 定</el-button>
       </div>
     </el-dialog>
-    <!-- 修改用户 -->
+    <!-- 修改用户dialog -->
     <el-dialog title="修改用户" :visible.sync="editDialogFormVisible" @close="editResetDialog">
       <el-form :model="editForm" :rules="rules" ref="editDialogForm">
         <el-form-item label="用户名" label-width="70px">
@@ -108,6 +113,28 @@
         <el-button @click="editDialogFormVisible = false">取 消</el-button>
         <el-button type="primary" @click="editSubmitForm">确 定</el-button>
       </div>
+    </el-dialog>
+    <!-- 分配角色dialog -->
+    <el-dialog title="提示" :visible.sync="UserDialogVisible" width="50%">
+      <div>
+        <p>当前的用户:{{roleInfo.username}}</p>
+        <p>当前的角色:{{roleInfo.role_name}}</p>
+        <p>
+          分配新角色:
+          <el-select v-model="selectedId" placeholder="请选择">
+            <el-option
+              v-for="item in options"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="UserDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="userRoleSubmit">确 定</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -133,12 +160,17 @@ export default {
       callback(new Error('请输入合法的手机号码'))
     }
     return {
+      // 分配角色的下拉列表数据
+      options: [],
+      selectedId: '',
       // 编辑
       editDialogFormVisible: false,
       // 编辑数据
       editForm: {
 
       },
+      // 分配角色数据
+      roleInfo: {},
       // 添加用户的表单数据
       addForm: {
         username: '',
@@ -166,6 +198,7 @@ export default {
           { validator: checkiphone, trigger: 'blur' }
         ]
       },
+      UserDialogVisible: false,
       dialogFormVisible: false,
       queryInfo: {
         query: '',
@@ -177,6 +210,24 @@ export default {
     }
   },
   methods: {
+    // 提交角色分配
+    async userRoleSubmit () {
+      if (!this.selectedId) return this.$message.error('请选择一个角色！')
+      const { data: res } = await this.$http.put(`users/${this.roleInfo.id}/role`, { rid: this.selectedId })
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.$message.success(res.meta.msg)
+      this.getUserList()
+      this.UserDialogVisible = false
+    },
+    // 打开dialog
+    async setUserDialog (row) {
+      this.UserDialogVisible = true
+      this.roleInfo = row
+      const { data: res } = await this.$http.get('/roles')
+
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.options = res.data
+    },
     // 删除确认
     open (id) {
       this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
@@ -184,7 +235,17 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async () => {
-        const { data: res } = await this.$http.delete('users/' + id)
+        const { data: ress } = await this.$http.get('/users', {
+          params: this.queryInfo
+        })
+        console.log(ress.data.users.length)
+        if (ress.data.users.length === 1) {
+          // console.log(this.queryInfo.pagesize)
+          // console.log(this.queryInfo.pagenum)
+          this.queryInfo.pagenum--
+          // console.log(this.queryInfo.pagenum)
+        }
+        const { data: res } = await this.$http.delete('/users/' + id)
         if (res.meta.status !== 200) {
           return this.$message({
             type: 'info',
@@ -210,7 +271,7 @@ export default {
         if (valid) {
           console.log(this.editForm)
           const { data: res } = await this.$http.put('/users/' + this.editForm.id, { email: this.editForm.email, mobile: this.editForm.mobile })
-          console.log(res)
+          // console.log(res)
           if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
           this.editDialogFormVisible = false
           this.getUserList()
@@ -282,9 +343,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.el-card {
-  margin-top: 10px;
-}
 .text {
   font-size: 14px;
 }
@@ -300,5 +358,8 @@ export default {
   padding: 0;
   width: 44px;
   height: 28px;
+}
+.mb {
+  margin-bottom: 5px;
 }
 </style>

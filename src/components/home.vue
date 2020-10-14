@@ -79,10 +79,10 @@ export default {
       this.$router.push('/login')
     },
     handleOpen (key, keyPath) {
-      console.log(key, keyPath)
+      // console.log(key, keyPath)
     },
     handleClose (key, keyPath) {
-      console.log(key, keyPath)
+      // console.log(key, keyPath)
     },
     async getHomeList () {
       const { data: res } = await this.$http.get('/menus')
