@@ -239,7 +239,7 @@ export default {
         const { data: ress } = await this.$http.get('/users', {
           params: this.queryInfo
         })
-        console.log(ress.data.users.length)
+        // console.log(ress.data.users.length)
         if (ress.data.users.length === 1) {
           // console.log(this.queryInfo.pagesize)
           // console.log(this.queryInfo.pagenum)
