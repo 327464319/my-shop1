@@ -98,7 +98,7 @@ export default {
       window.sessionStorage.setItem('path', abpath)
     }
   },
-  mounted () {
+  created () {
     this.getHomeList()
     const path = window.sessionStorage.getItem('path')
     this.defaultActive = path

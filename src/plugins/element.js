@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { Pagination, Tooltip, TableColumn, Breadcrumb, Aside, Button, Col, Container, Form, FormItem, Header, Input, Main, Menu, MenuItem, MenuItemGroup, Message, Row, Submenu, BreadcrumbItem, Card, Table, Switch, Dialog, MessageBox, Tag, Tree, Select, Option } from 'element-ui'
+import { Pagination, Tooltip, TableColumn, Breadcrumb, Aside, Button, Col, Container, Form, FormItem, Header, Input, Main, Menu, MenuItem, MenuItemGroup, Message, Row, Submenu, BreadcrumbItem, Card, Table, Switch, Dialog, MessageBox, Tag, Tree, Select, Option, Cascader } from 'element-ui'
 
 Vue.use(Button)
 Vue.use(Form)
@@ -32,6 +32,7 @@ Vue.use(Tag)
 Vue.use(Tree)
 Vue.use(Select)
 Vue.use(Option)
+Vue.use(Cascader)
 // Vue.use(MessageBox)
 // 这个使用后每次刷新都会有message-box空白弹窗
 

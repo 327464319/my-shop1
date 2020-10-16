@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>用户管理</el-breadcrumb-item>
       <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
@@ -210,6 +210,7 @@ export default {
     }
   },
   methods: {
+
     // 提交角色分配
     async userRoleSubmit () {
       if (!this.selectedId) return this.$message.error('请选择一个角色！')

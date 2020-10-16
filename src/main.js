@@ -5,6 +5,18 @@ import '@/assets/global.css'
 import './plugins/element.js'
 import axios from 'axios'
 import './assets/fonts/iconfont.css'
+import moment from 'moment' // 导入模块
+import removePath from './tools/removePath'
+// 使用树状表格
+import ZkTable from 'vue-table-with-tree-grid'
+
+Vue.use(ZkTable)
+moment.locale('zh-cn') // 设置语言 或 moment.lang('zh-cn');
+Vue.prototype.$moment = moment// 赋值使用
+Vue.filter('dataFormat', (value, arg) => {
+  return moment(value).format(arg)
+})
+Vue.prototype.$removePath = removePath
 
 Vue.config.productionTip = false
 Vue.prototype.$http = axios
