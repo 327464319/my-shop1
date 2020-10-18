@@ -23,3 +23,10 @@ html,body,#app{
 .el-scrollbar__wrap {
   max-height: 400px !important;
 }
+.el-steps{
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+.ql-editor {
+  height: 300px !important;
+}

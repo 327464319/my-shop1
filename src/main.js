@@ -7,8 +7,19 @@ import axios from 'axios'
 import './assets/fonts/iconfont.css'
 import moment from 'moment' // 导入模块
 import removePath from './tools/removePath'
+// 富文本
+import VueQuillEditor from 'vue-quill-editor'
+
+// 富文本require styles
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
+
 // 使用树状表格
 import ZkTable from 'vue-table-with-tree-grid'
+// 使用富文本
+
+Vue.use(VueQuillEditor /* { default global options } */)
 
 Vue.use(ZkTable)
 moment.locale('zh-cn') // 设置语言 或 moment.lang('zh-cn');

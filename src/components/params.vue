@@ -156,24 +156,27 @@ export default {
   },
   methods: {
     // tag添加与修改提交公用方法
-    async submitTag (row) {
+    async submitTag (row, attrVals) {
       const { data: res } = await this.$http.put(`categories/${row.cat_id}/attributes/${row.attr_id}`, {
         attr_name: row.attr_name,
         attr_sel: row.attr_sel,
-        attr_vals: row.attr_vals.join(' ')
+        attr_vals: attrVals?.join(' ') || row.attr_vals.join(' ')
       })
-      // 无论失败还是成功都得让数据更新，
-      // 因为之前对row进行了改动，失败就得回调，
-      // 成功了，别人也可能改了数据
-      // this.getTableData()
-      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+
+      if (res.meta.status !== 200) {
+        this.$message.error(res.meta.msg)
+        return false
+      }
       this.$message.success(res.meta.msg)
+      return true
     },
 
     // 表格tag删除
-    handleClose (row, index) {
-      row.attr_vals = row.attr_vals.filter((item, i) => { return i !== index })
-      this.submitTag(row)
+    async handleClose (row, index) {
+      const attrVals = row.attr_vals.filter((item, i) => { return i !== index })
+      const flag = await this.submitTag(row, attrVals)
+      // console.log(flag)
+      if (flag) { row.attr_vals = attrVals }
     },
 
     showInput (row) {
@@ -183,12 +186,20 @@ export default {
       })
     },
 
-    handleInputConfirm (row) {
+    async handleInputConfirm (row) {
       row.inputVisible = false
       if (row.inputValue.trim() === '') { return false }
+      // 需要获得一个新的数组，与元素组地址不同
+      const oldAttrVals = [...row.attr_vals]
       row.attr_vals.push(row.inputValue.trim())
-      this.submitTag(row)
-      row.inputValue = ''
+      const flag = await this.submitTag(row)
+      // 如果编辑失败，就把原数组还原回去
+      if (flag) {
+        // 成功需要清空表单数据
+        row.inputValue = ''
+      } else {
+        row.attr_vals = oldAttrVals
+      }
     },
     // 编辑提交
     editDialogSubmit () {
