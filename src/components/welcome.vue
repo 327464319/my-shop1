@@ -5,6 +5,7 @@
 <script>
 export default {
   created () {
+    console.log(111)
     this.$removePath.removePath()
   }
 }

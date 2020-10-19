@@ -17,8 +17,9 @@ import 'quill/dist/quill.bubble.css'
 
 // 使用树状表格
 import ZkTable from 'vue-table-with-tree-grid'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css' // 这个样式必须引入
 // 使用富文本
-
 Vue.use(VueQuillEditor /* { default global options } */)
 
 Vue.use(ZkTable)
@@ -33,11 +34,15 @@ Vue.config.productionTip = false
 Vue.prototype.$http = axios
 axios.defaults.baseURL = 'http://vue-shop-api.itheima.net/api/private/v1'
 axios.interceptors.request.use(config => {
+  NProgress.start()
   const token = window.sessionStorage.getItem('token')
   config.headers.Authorization = token
   return config
 })
-
+axios.interceptors.response.use(config => {
+  NProgress.done()
+  return config
+})
 new Vue({
   router,
   render: h => h(App)
